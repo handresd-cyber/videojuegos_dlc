@@ -1,25 +1,27 @@
 <?php
-require_once 'Plataforma.php';
-require_once 'config.php';
-require_once 'Videojuego.php';
+require_once __DIR__ . '/../classes/config.php';
+require_once __DIR__ . '/../classes/Videojuego.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $titulo = $_POST['titulo'];
-    $precio = $_POST['precio'];
-    $stock = $_POST['stock'];
-    $plataforma_id = $_POST['plataforma_id'];
-    $desarrolladora = $_POST['desarrolladora'];
-    $ano_lanzamiento = $_POST['ano_lanzamiento'];
+    // Sanitizar/leer campos
+    $titulo = $_POST['titulo'] ?? '';
+    $precio = isset($_POST['precio']) ? (float)$_POST['precio'] : 0.0;
+    $stock = isset($_POST['stock']) ? (int)$_POST['stock'] : 0;
+    $plataforma_id = isset($_POST['plataforma_id']) ? (int)$_POST['plataforma_id'] : null;
+    $genero_id = isset($_POST['genero_id']) ? (int)$_POST['genero_id'] : null;
+    $desarrolladora = $_POST['desarrolladora'] ?? null;
+    $ano_lanzamiento = isset($_POST['ano_lanzamiento']) ? (int)$_POST['ano_lanzamiento'] : null;
 
-    // Crear un objeto Videojuego
-    $videojuego = new Videojuego(null, $titulo, 'Videojuego', $precio, $stock, $plataforma_id, null, $desarrolladora, $ano_lanzamiento);
-
-    // Guardar el videojuego en la base de datos
-    $repositorio = new Repositorio($conexion);
-    if ($repositorio->GuardarVideojuego($videojuego)) {
-        echo "Videojuego guardado exitosamente.";
-    } else {
-        echo "Error al guardar el videojuego.";
+    // Guardar usando la clase Videojuego y la conexión $pdo (definida en config.php)
+    try {
+        $ok = Videojuego::crear($pdo, $titulo, $desarrolladora, $ano_lanzamiento, $genero_id, $plataforma_id, $precio, $stock);
+        if ($ok) {
+            echo "Videojuego guardado exitosamente.";
+        } else {
+            echo "Error al guardar el videojuego.";
+        }
+    } catch (Throwable $e) {
+        echo "Excepción al guardar: " . $e->getMessage();
     }
 } else {
     echo "Método no permitido.";
